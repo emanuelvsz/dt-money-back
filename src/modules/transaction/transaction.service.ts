@@ -19,9 +19,29 @@ export class TransactionService {
     return createdTransaction;
   }
 
-  async findAll() {
-    const transactions = await this.prisma.transaction.findMany();
-    return transactions;
+  async findAll(page = 1, limit = 5) {
+    const pageNumber = Number.isInteger(page) && page > 0 ? page : 1;
+    const limitNumber = Number.isInteger(limit) && limit > 0 ? limit : 5;
+
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.transaction.findMany({
+        skip,
+        take: limitNumber,
+        orderBy: { data: 'desc' },
+      }),
+      this.prisma.transaction.count(),
+    ]);
+
+    const lastPage = Math.ceil(total / limitNumber);
+
+    return {
+      data,
+      total,
+      page: pageNumber,
+      lastPage,
+    };
   }
 
   async findOne(id: string) {

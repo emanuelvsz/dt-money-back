@@ -8,6 +8,7 @@ import {
   Delete,
   Res,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -26,13 +27,18 @@ export class TransactionController {
     const createdTransaction =
       await this.transactionService.create(createTransactionDto);
     res.status(HttpStatus.CREATED).send(createdTransaction);
-    return;
   }
 
   @Get()
-  async findAll(@Res() res: Response) {
-    const transactions = await this.transactionService.findAll();
-    return res.status(HttpStatus.OK).send(transactions);
+  async findAll(
+    @Query('page') page = '1',
+    @Query('limit') limit = '5',
+    @Res() res: Response,
+  ) {
+    const pageNumber = parseInt(page, 10) || 1;
+    const limitNumber = parseInt(limit, 10) || 5;
+    const result = await this.transactionService.findAll(pageNumber, limitNumber);
+    return res.status(HttpStatus.OK).send(result);
   }
 
   @Get(':id')
